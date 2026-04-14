@@ -1,0 +1,10 @@
+{
+  "id": "tlh-rang-colors",
+  "title": "TLH - Rang Colors",
+  "description": "Couleurs dynamiques pour les rangs et raretés dans The Last Horizon",
+  "version": "1.0.0",
+  "compatibility": { "minimum": "12", "verified": "13" },
+  "authors": [{ "name": "The Last Horizon" }],
+  "esmodules": ["tlh-rang-colors.mjs"],
+  "manifest": ""
+}
