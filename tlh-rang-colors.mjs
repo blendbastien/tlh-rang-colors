@@ -1,29 +1,36 @@
-// TLH — Couleurs dynamiques rangs & raretés
-// Fonctionne avec le Custom System Builder 5.2.x
+// TLH — Couleurs dynamiques rang (textField)
+const RANGS = ['F','E','D','C','B','A','S','SS','SSS'];
 
-const RANG_CLASSES = ['rang-F','rang-E','rang-D','rang-C','rang-B','rang-A','rang-S','rang-SS','rang-SSS'];
-
-function updateRangSelect(selectEl) {
-  RANG_CLASSES.forEach(c => selectEl.classList.remove(c));
-  const val = selectEl.value;
-  if (val) selectEl.classList.add('rang-' + val);
-}
-
-function updateAllRangs(html) {
-  html.querySelectorAll('.badge-rang select').forEach(sel => {
-    updateRangSelect(sel);
-    sel.addEventListener('change', () => updateRangSelect(sel));
+function applyRang(container) {
+  // Cherche le conteneur .badge-rang
+  container.querySelectorAll('.badge-rang').forEach(el => {
+    const input = el.querySelector('input');
+    if (!input) return;
+    const val = input.value.trim().toUpperCase();
+    // Retire toutes les classes rang
+    RANGS.forEach(r => el.classList.remove('rang-' + r));
+    // Applique la bonne classe
+    if (RANGS.includes(val)) el.classList.add('rang-' + val);
+    // Bind event si pas déjà fait
+    if (!input.dataset.tlhBound) {
+      input.dataset.tlhBound = '1';
+      input.addEventListener('input', () => applyRang(container));
+      input.addEventListener('change', () => applyRang(container));
+    }
   });
 }
 
-// Applique au rendu de chaque fiche
-Hooks.on('renderActorSheet', (app, html) => updateAllRangs(html[0] ?? html));
-Hooks.on('renderItemSheet',  (app, html) => updateAllRangs(html[0] ?? html));
+function scanAll(html) {
+  const root = html instanceof HTMLElement ? html : (html?.[0] ?? document);
+  applyRang(root);
+}
 
-// Relance sur tout re-rendu CSB
+Hooks.on('renderActorSheet',  (app, html) => scanAll(html));
 Hooks.on('renderApplication', (app, html) => {
-  if (app?.constructor?.name?.includes('CustomActor') || 
-      html?.querySelector?.('.custom-system-entity')) {
-    updateAllRangs(html[0] ?? html);
-  }
+  if (html?.[0]?.querySelector?.('.custom-system-entity')) scanAll(html);
+});
+
+// Applique immédiatement sur les fiches déjà ouvertes
+Hooks.once('ready', () => {
+  document.querySelectorAll('.custom-system-entity').forEach(el => applyRang(el));
 });
