@@ -1,23 +1,29 @@
-// TLH — Rang colors + World themes v1.2 — robuste CSB/Foundry v12-v13
+// TLH — Rang colors + World themes v1.3 — rang select + robuste CSB/Foundry v12-v13
 
 /* ══════════════ RANGS ══════════════ */
 const RANGS = ['F','E','D','C','B','A','S','SS','SSS'];
 const RANG_CLASSES = RANGS.map(r => 'rang-' + r);
 
+function rangField(el) {
+  // le rang peut être un input (ancien) ou un select (nouveau)
+  if (el.matches('input, select')) return el;
+  return el.querySelector('select') || el.querySelector('input[type="text"]');
+}
+
 function applyRang(el) {
-  const input = el.matches('input') ? el : el.querySelector('input[type="text"]');
-  if (!input) return;
-  const val = (input.value || '').trim().toUpperCase();
+  const f = rangField(el);
+  if (!f) return;
+  const val = (f.value || '').trim().toUpperCase();
   RANG_CLASSES.forEach(c => el.classList.remove(c));
   if (RANGS.includes(val)) el.classList.add('rang-' + val);
 }
 
 function bindRang(el) {
-  const input = el.matches('input') ? el : el.querySelector('input[type="text"]');
-  if (!input || input.dataset.tlhBound) return;
-  input.dataset.tlhBound = '1';
+  const f = rangField(el);
+  if (!f || f.dataset.tlhBound) return;
+  f.dataset.tlhBound = '1';
   ['input','change','blur','keyup'].forEach(evt =>
-    input.addEventListener(evt, () => applyRang(el))
+    f.addEventListener(evt, () => applyRang(el))
   );
 }
 
