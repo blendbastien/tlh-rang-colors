@@ -28,7 +28,7 @@ function bindRang(el) {
 }
 
 /* ══════════════ THÈMES PAR MONDE ══════════════ */
-const MONDES = ['eos','andromeda','clockwork','cordelia','eryndor','hyperion','inertia','nova','triangulum'];
+const MONDES = ['systeme','eos','andromeda','clockwork','cordelia','eryndor','hyperion','inertia','nova','triangulum'];
 const MONDE_CLASSES = MONDES.map(m => 'monde-' + m);
 
 function getSelect(el) {
