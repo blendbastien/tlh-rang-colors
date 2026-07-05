@@ -1,18 +1,19 @@
-// TLH — Rang colors v4 — MutationObserver + scan complet
+// TLH — Rang colors + World themes v1.2 — robuste CSB/Foundry v12-v13
 
+/* ══════════════ RANGS ══════════════ */
 const RANGS = ['F','E','D','C','B','A','S','SS','SSS'];
 const RANG_CLASSES = RANGS.map(r => 'rang-' + r);
 
 function applyRang(el) {
-  const input = el.querySelector('input[type="text"]');
+  const input = el.matches('input') ? el : el.querySelector('input[type="text"]');
   if (!input) return;
-  const val = input.value.trim().toUpperCase();
+  const val = (input.value || '').trim().toUpperCase();
   RANG_CLASSES.forEach(c => el.classList.remove(c));
   if (RANGS.includes(val)) el.classList.add('rang-' + val);
 }
 
-function bindInput(el) {
-  const input = el.querySelector('input[type="text"]');
+function bindRang(el) {
+  const input = el.matches('input') ? el : el.querySelector('input[type="text"]');
   if (!input || input.dataset.tlhBound) return;
   input.dataset.tlhBound = '1';
   ['input','change','blur','keyup'].forEach(evt =>
@@ -20,34 +21,64 @@ function bindInput(el) {
   );
 }
 
-function scanAll(root) {
-  const r = root instanceof HTMLElement ? root : (root?.[0] ?? document);
-  r.querySelectorAll('.badge-rang').forEach(el => {
-    applyRang(el);
-    bindInput(el);
+/* ══════════════ THÈMES PAR MONDE ══════════════ */
+const MONDES = ['eos','andromeda','clockwork','cordelia','eryndor','hyperion','inertia','nova','triangulum'];
+const MONDE_CLASSES = MONDES.map(m => 'monde-' + m);
+
+function getSelect(el) {
+  // CSB peut poser la cssClass sur le <select> lui-même OU sur son conteneur
+  if (el.matches && el.matches('select')) return el;
+  return el.querySelector ? el.querySelector('select') : null;
+}
+
+function themeTargets(sel) {
+  // Poser la classe sur tous les ancêtres plausibles : fenêtre v1, v2, et le form
+  const targets = [];
+  const f = sel.closest('form');                    if (f) targets.push(f);
+  const a1 = sel.closest('.app.window-app');        if (a1) targets.push(a1);
+  const a2 = sel.closest('.application');           if (a2) targets.push(a2);
+  const sh = sel.closest('.custom-system-actor');   if (sh) targets.push(sh);
+  return targets.length ? targets : [sel.parentElement];
+}
+
+function applyMonde(sel) {
+  const val = (sel.value || '').trim().toLowerCase();
+  themeTargets(sel).forEach(root => {
+    if (!root) return;
+    MONDE_CLASSES.forEach(c => root.classList.remove(c));
+    if (MONDES.includes(val)) root.classList.add('monde-' + val);
   });
 }
 
-// Observer global — re-scan à chaque changement DOM
-const observer = new MutationObserver(() => {
-  document.querySelectorAll('.badge-rang').forEach(el => {
-    applyRang(el);
-    bindInput(el);
-  });
-});
+function bindMonde(el) {
+  const sel = getSelect(el);
+  if (!sel) return;
+  if (!sel.dataset.tlhMondeBound) {
+    sel.dataset.tlhMondeBound = '1';
+    sel.addEventListener('change', () => applyMonde(sel));
+  }
+  applyMonde(sel);
+}
+
+/* ══════════════ SCAN GLOBAL ══════════════ */
+function scanAll(root) {
+  let r = document;
+  if (root instanceof HTMLElement) r = root;
+  else if (root && root[0] instanceof HTMLElement) r = root[0];
+  r.querySelectorAll('.badge-rang').forEach(el => { applyRang(el); bindRang(el); });
+  // les deux cas de placement de la classe
+  r.querySelectorAll('.monde-select, select.monde-select, .monde-select select, select[name$=".monde"]')
+    .forEach(el => bindMonde(el.matches('select') ? el : el));
+}
+
+const observer = new MutationObserver(() => scanAll(document));
 
 Hooks.once('ready', () => {
   scanAll(document);
   observer.observe(document.body, { childList: true, subtree: true });
+  // filet de sécurité : rescan léger périodique (fiches restaurées, re-rendus CSB)
+  setInterval(() => scanAll(document), 2000);
 });
 
-// Hooks Foundry
 Hooks.on('renderActorSheet', (app, html) => scanAll(html));
-Hooks.on('renderApplication', (app, html) => {
-  if (html?.[0]?.querySelector?.('.badge-rang')) scanAll(html);
-});
-
-// Re-scan quand la fiche est restaurée depuis l'état minimisé
-Hooks.on('getApplicationHeaderButtons', () => {
-  setTimeout(() => scanAll(document), 200);
-});
+Hooks.on('renderApplication', (app, html) => scanAll(html));
