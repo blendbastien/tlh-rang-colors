@@ -2,7 +2,7 @@
   "id": "tlh-rang-colors",
   "title": "TLH - Rang Colors",
   "description": "Couleurs dynamiques des rangs + thèmes de fiche par monde (9 mondes) pour The Last Horizon (Custom System Builder)",
-  "version": "1.3.1",
+  "version": "1.4.0",
   "compatibility": {
     "minimum": "12",
     "verified": "13"

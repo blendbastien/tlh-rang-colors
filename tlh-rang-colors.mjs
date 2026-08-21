@@ -88,3 +88,41 @@ Hooks.once('ready', () => {
 
 Hooks.on('renderActorSheet', (app, html) => scanAll(html));
 Hooks.on('renderApplication', (app, html) => scanAll(html));
+
+
+/* ═══════════ v1.4 — couleurs par valeur dans les tableaux ═══════════
+   Lit les colonnes rang/rareté de chaque ligne des displayers et pose
+   des classes (cell-rang-F…, cell-rar-nihil…) que le CSS colore. */
+const TLH_RANGS = ['F','E','D','C','B','A','S','SS','SSS'];
+function tlhSlug(txt) {
+  return txt.trim().toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/\+/g,'plus').replace(/[^a-z]/g,'');
+}
+function tlhDecorateTables(root) {
+  const scope = (root && root.querySelectorAll) ? root : document;
+  scope.querySelectorAll('.custom-system-entity table tr').forEach(tr => {
+    const tdRang = tr.querySelector('td[data-name*="rang" i]');
+    if (tdRang) {
+      const v = tdRang.textContent.trim().toUpperCase();
+      TLH_RANGS.forEach(r => tdRang.classList.remove('cell-rang-'+r));
+      if (TLH_RANGS.includes(v)) tdRang.classList.add('cell-rang-'+v);
+    }
+    const tdRar = tr.querySelector('td[data-name*="rarete" i]');
+    if (tdRar) {
+      const slug = tlhSlug(tdRar.textContent);
+      [...tdRar.classList].forEach(c => { if (c.startsWith('cell-rar-')) tdRar.classList.remove(c); });
+      if (slug) tdRar.classList.add('cell-rar-'+slug);
+    }
+  });
+}
+let tlhTblScheduled = false;
+function tlhScheduleTables() {
+  if (tlhTblScheduled) return;
+  tlhTblScheduled = true;
+  requestAnimationFrame(() => { tlhTblScheduled = false; tlhDecorateTables(document); });
+}
+Hooks.once('ready', () => {
+  tlhDecorateTables(document);
+  new MutationObserver(tlhScheduleTables).observe(document.body, { childList: true, subtree: true, characterData: true });
+});
