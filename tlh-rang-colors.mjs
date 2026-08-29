@@ -110,6 +110,11 @@ function tlhDecorateTables(){
       if (idxRang<0 && /\brang\b/.test(t)) idxRang=i;
       if (idxRar<0 && /raret/.test(t)) idxRar=i;
     });
+    let idxElem=-1;
+    if (head) [...head.children].forEach((c,i)=>{
+      const t=c.textContent.trim().toLowerCase();
+      if (idxElem<0 && /él[ée]m|element/.test(t)) idxElem=i;
+    });
     table.querySelectorAll('tr').forEach((tr,ri)=>{
       if (ri===0) return;
       // stratégie A : data-name où qu'il soit dans la ligne
@@ -121,6 +126,10 @@ function tlhDecorateTables(){
         n+=tlhSetCell(tdR,'rang', TLH_RANGS.includes(v)?v:null); }
       if (tdQ){ const s=tlhSlug(tdQ.textContent);
         n+=tlhSetCell(tdQ,'rar', s||null); }
+      let elE = tr.querySelector('[data-name*="element" i]');
+      let tdE = elE ? (elE.closest('td') || elE) : (idxElem>=0 ? tr.children[idxElem] : null);
+      if (tdE){ const s=tlhSlug(tdE.textContent);
+        n+=tlhSetCell(tdE,'elem', s||null); }
     });
   });
   return n;
@@ -132,7 +141,7 @@ function tlhScheduleTables(){
   requestAnimationFrame(()=>{ tlhTblScheduled=false;
     const n=tlhDecorateTables();
     if (n>0 && !tlhAnnounced){ tlhAnnounced=true;
-      console.info('%cTLH v1.5 — '+n+' cellules rang/rareté décorées','color:#22c55e;font-weight:bold'); }
+      console.info('%cTLH v1.6 — '+n+' cellules rang/rareté/élément décorées','color:#22c55e;font-weight:bold'); }
   });
 }
 Hooks.once('ready', ()=>{
